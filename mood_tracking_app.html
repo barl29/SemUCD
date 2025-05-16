@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Mood Tracker</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.6.2/recharts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f9fafb;
+      padding: 20px;
+    }
+    
+    .container {
+      background-color: #f3f4f6;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-width: 1024px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4338ca;
+      margin-bottom: 16px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .tab-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .tab-button {
+      padding: 8px 16px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      background-color: #e5e7eb;
+    }
+    
+    .tab-button.active {
+      background-color: #4f46e5;
+      color: white;
+    }
+    
+    .content-panel {
+      background-color: white;
+      padding: 16px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+    
+    .grid-cols-1 {
+      grid-template-columns: 1fr;
+    }
+    
+    @media (min-width: 768px) {
+      .grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .grid-cols-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+    }
+    
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    
+    @media (min-width: 768px) {
+      .mood-grid {
+        grid-template-columns: repeat(6, 1fr);
+      }
+    }
+    
+    .mood-item {
+      padding: 8px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      text-align: center;
+      cursor: pointer;
+    }
+    
+    .mood-item.selected {
+      border-color: #6366f1;
+      background-color: #eef2ff;
+    }
+    
+    .mood-emoji {
+      font-size: 20px;
+    }
+    
+    .mood-label {
+      font-size: 12px;
+      text-transform: capitalize;
+    }
+    
+    .range-container {
+      width: 100%;
+    }
+    
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+    
+    button.submit-btn {
+      width: 100%;
+      background-color: #4f46e5;
+      color: white;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    
+    .history-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .entry-card {
+      border: 1px solid #d1d5db;
+      padding: 16px;
+      border-radius: 4px;
+    }
+    
+    .entry-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+    }
+    
+    .delete-btn {
+      color: #ef4444;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .entry-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .stat-box {
+      padding: 8px;
+      border-radius: 4px;
+    }
+    
+    .stat-box:nth-child(1) {
+      background-color: #eff6ff;
+    }
+    
+    .stat-box:nth-child(2) {
+      background-color: #ecfdf5;
+    }
+    
+    .stat-box:nth-child(3) {
+      background-color: #fffbeb;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    .notes-container {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #4b5563;
+    }
+    
+    .notes-label {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    
+    .summary-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    
+    @media (min-width: 768px) {
+      .summary-container {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    .summary-box {
+      padding: 16px;
+      border-radius: 4px;
+    }
+    
+    .summary-box:nth-child(1) {
+      background-color: #eff6ff;
+    }
+    
+    .summary-box:nth-child(2) {
+      background-color: #ecfdf5;
+    }
+    
+    .summary-box:nth-child(3) {
+      background-color: #fffbeb;
+    }
+    
+    .summary-label {
+      font-size: 14px;
+      color: #6b7280;
+    }
+    
+    .summary-value {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    
+    .chart-container {
+      height: 256px;
+      margin-bottom: 24px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .mb-4 {
+      margin-bottom: 16px;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .italic {
+      font-style: italic;
+    }
+
+    .text-gray {
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📆 Daily Mood Tracker</h1>
+    
+    <div class="tab-container">
+      <button class="tab-button active" data-view="entry">Log Entry</button>
+      <button class="tab-button" data-view="history">History</button>
+      <button class="tab-button" data-view="charts">Insights</button>
+    </div>
+    
+    <div id="entry-view" class="content-panel">
+      <div class="grid grid-cols-1 grid-cols-2">
+        <div>
+          <label>📅 Date</label>
+          <input type="date" id="date-input">
+        </div>
+        
+        <div>
+          <label>📚 Hours Studied</label>
+          <input type="number" id="study-input" placeholder="e.g. 4.5" step="0.5" min="0">
+        </div>
+        
+        <div>
+          <label>🌙 Hours of Sleep</label>
+          <input type="number" id="sleep-input" placeholder="e.g. 7.5" step="0.5" min="0">
+        </div>
+        
+        <div>
+          <label id="stress-label">📊 Stress Level (1-10): 5</label>
+          <input type="range" id="stress-input" min="1" max="10" value="5">
+          <div class="range-labels">
+            <span>Low</span>
+            <span>Medium</span>
+            <span>High</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label>😊 Mood</label>
+        <div class="mood-grid">
+          <div class="mood-item" data-mood="happy">
+            <div class="mood-emoji">😊</div>
+            <div class="mood-label">Happy</div>
+          </div>
+          <div class="mood-item selected" data-mood="neutral">
+            <div class="mood-emoji">😐</div>
+            <div class="mood-label">Neutral</div>
+          </div>
+          <div class="mood-item" data-mood="sad">
+            <div class="mood-emoji">😔</div>
+            <div class="mood-label">Sad</div>
+          </div>
+          <div class="mood-item" data-mood="tired">
+            <div class="mood-emoji">😴</div>
+            <div class="mood-label">Tired</div>
+          </div>
+          <div class="mood-item" data-mood="energetic">
+            <div class="mood-emoji">⚡</div>
+            <div class="mood-label">Energetic</div>
+          </div>
+          <div class="mood-item" data-mood="stressed">
+            <div class="mood-emoji">😰</div>
+            <div class="mood-label">Stressed</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-4">
+        <label>📝 Notes</label>
+        <textarea id="notes-input" rows="3" placeholder="How was your day? Any observations?"></textarea>
+      </div>
+      
+      <button class="submit-btn" id="save-btn">Save Entry</button>
+    </div>
+    
+    <div id="history-view" class="content-panel hidden">
+      <h2>📜 History</h2>
+      
+      <div id="entries-container" class="history-container">
+        <!-- Entries will be populated here -->
+        <p class="text-gray italic text-center" id="no-entries-message">No entries yet. Create your first mood entry!</p>
+      </div>
+    </div>
+    
+    <div id="charts-view" class="content-panel hidden">
+      <h2>📈 Insights</h2>
+      
+      <div id="not-enough-data" class="text-gray italic text-center">Add at least 2 entries to view insights.</div>
+      
+      <div id="insights-container" class="hidden">
+        <div>
+          <h3>Trend Analysis</h3>
+          <div class="chart-container">
+            <canvas id="trends-chart"></canvas>
+          </div>
+        </div>
+        
+        <div>
+          <h3>Summary</h3>
+          <div class="summary-container">
+            <div class="summary-box">
+              <div class="summary-label">Avg. Study Hours</div>
+              <div class="summary-value" id="avg-study">0.0</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-label">Avg. Sleep Hours</div>
+              <div class="summary-value" id="avg-sleep">0.0</div>
+            </div>
+            <div class="summary-box">
+              <div class="summary-label">Avg. Stress Level</div>
+              <div class="summary-value" id="avg-stress">0.0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const contentPanels = document.querySelectorAll('.content-panel');
+    const dateInput = document.getElementById('date-input');
+    const studyInput = document.getElementById('study-input');
+    const sleepInput = document.getElementById('sleep-input');
+    const stressInput = document.getElementById('stress-input');
+    const stressLabel = document.getElementById('stress-label');
+    const moodItems = document.querySelectorAll('.mood-item');
+    const notesInput = document.getElementById('notes-input');
+    const saveButton = document.getElementById('save-btn');
+    const entriesContainer = document.getElementById('entries-container');
+    const noEntriesMessage = document.getElementById('no-entries-message');
+    const notEnoughDataMessage = document.getElementById('not-enough-data');
+    const insightsContainer = document.getElementById('insights-container');
+    const avgStudy = document.getElementById('avg-study');
+    const avgSleep = document.getElementById('avg-sleep');
+    const avgStress = document.getElementById('avg-stress');
+    
+    // State
+    let entries = [];
+    let selectedMood = 'neutral';
+    let chart = null;
+    
+    // Set default date to today
+    dateInput.value = new Date().toISOString().split('T')[0];
+    
+    // Initialize
+    function init() {
+      // Load entries from localStorage
+      const savedEntries = localStorage.getItem('moodEntries');
+      if (savedEntries) {
+        entries = JSON.parse(savedEntries);
+        updateUI();
+      }
+      
+      // Set up event listeners
+      setupEventListeners();
+    }
+    
+    function setupEventListeners() {
+      // Tab navigation
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const viewName = button.dataset.view;
+          setActiveView(viewName);
+        });
+      });
+      
+      // Stress level slider
+      stressInput.addEventListener('input', (e) => {
+        stressLabel.textContent = `📊 Stress Level (1-10): ${e.target.value}`;
+      });
+      
+      // Mood selection
+      moodItems.forEach(item => {
+        item.addEventListener('click', () => {
+          moodItems.forEach(i => i.classList.remove('selected'));
+          item.classList.add('selected');
+          selectedMood = item.dataset.mood;
+        });
+      });
+      
+      // Save entry
+      saveButton.addEventListener('click', saveEntry);
+    }
+    
+    function setActiveView(viewName) {
+      // Update tab buttons
+      tabButtons.forEach(button => {
+        if (button.dataset.view === viewName) {
+          button.classList.add('active');
+        } else {
+          button.classList.remove('active');
+        }
+      });
+      
+      // Update content panels
+      document.getElementById('entry-view').classList.add('hidden');
+      document.getElementById('history-view').classList.add('hidden');
+      document.getElementById('charts-view').classList.add('hidden');
+      
+      document.getElementById(`${viewName}-view`).classList.remove('hidden');
+      
+      // Update charts if needed
+      if (viewName === 'charts' && entries.length >= 2) {
+        updateCharts();
+      }
+    }
+    
+    function saveEntry() {
+      const newEntry = {
+        id: Date.now(),
+        date: dateInput.value,
+        hoursStudied: parseFloat(studyInput.value) || 0,
+        hoursSleep: parseFloat(sleepInput.value) || 0,
+        stressLevel: parseInt(stressInput.value),
+        mood: selectedMood,
+        notes: notesInput.value
+      };
+      
+      entries.push(newEntry);
+      localStorage.setItem('moodEntries', JSON.stringify(entries));
+      
+      // Reset form
+      dateInput.value = new Date().toISOString().split('T')[0];
+      studyInput.value = '';
+      sleepInput.value = '';
+      stressInput.value = '5';
+      stressLabel.textContent = '📊 Stress Level (1-10): 5';
+      moodItems.forEach(item => {
+        if (item.dataset.mood === 'neutral') {
+          item.classList.add('selected');
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+      selectedMood = 'neutral';
+      notesInput.value = '';
+      
+      updateUI();
+    }
+    
+    function deleteEntry(id) {
+      entries = entries.filter(entry => entry.id !== id);
+      localStorage.setItem('moodEntries', JSON.stringify(entries));
+      updateUI();
+    }
+    
+    function updateUI() {
+      updateEntryList();
+      updateInsights();
+    }
+    
+    function updateEntryList() {
+      // Sort entries by date (newest first)
+      const sortedEntries = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      // Toggle visibility of no entries message
+      if (entries.length === 0) {
+        noEntriesMessage.classList.remove('hidden');
+        entriesContainer.innerHTML = '';
+        entriesContainer.appendChild(noEntriesMessage);
+      } else {
+        noEntriesMessage.classList.add('hidden');
+        
+        // Create entry elements
+        entriesContainer.innerHTML = '';
+        sortedEntries.forEach(entry => {
+          const entryEl = createEntryElement(entry);
+          entriesContainer.appendChild(entryEl);
+        });
+      }
+    }
+    
+    function createEntryElement(entry) {
+      const entryEl = document.createElement('div');
+      entryEl.className = 'entry-card';
+      
+      const dateFormatted = formatDate(entry.date);
+      const moodEmoji = getMoodEmoji(entry.mood);
+      
+      entryEl.innerHTML = `
+        <div class="entry-header">
+          <div>${dateFormatted} ${moodEmoji}</div>
+          <button class="delete-btn" data-id="${entry.id}">Delete</button>
+        </div>
+        
+        <div class="entry-stats">
+          <div class="stat-box">
+            <div class="stat-label">📚 Study</div>
+            <div>${entry.hoursStudied} hrs</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">🌙 Sleep</div>
+            <div>${entry.hoursSleep} hrs</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">📊 Stress</div>
+            <div>${entry.stressLevel}/10</div>
+          </div>
+        </div>
+        
+        ${entry.notes ? `
+          <div class="notes-container">
+            <div class="notes-label">📝 Notes:</div>
+            <p>${entry.notes}</p>
+          </div>
+        ` : ''}
+      `;
+      
+      // Add delete handler
+      entryEl.querySelector('.delete-btn').addEventListener('click', () => {
+        deleteEntry(entry.id);
+      });
+      
+      return entryEl;
+    }
+    
+    function updateInsights() {
+      if (entries.length < 2) {
+        notEnoughDataMessage.classList.remove('hidden');
+        insightsContainer.classList.add('hidden');
+        if (chart) {
+          chart.destroy();
+          chart = null;
+        }
+      } else {
+        notEnoughDataMessage.classList.add('hidden');
+        insightsContainer.classList.remove('hidden');
+        
+        // Calculate averages
+        const totalStudied = entries.reduce((sum, entry) => sum + entry.hoursStudied, 0);
+        const totalSleep = entries.reduce((sum, entry) => sum + entry.hoursSleep, 0);
+        const totalStress = entries.reduce((sum, entry) => sum + entry.stressLevel, 0);
+        
+        avgStudy.textContent = (totalStudied / entries.length).toFixed(1);
+        avgSleep.textContent = (totalSleep / entries.length).toFixed(1);
+        avgStress.textContent = (totalStress / entries.length).toFixed(1);
+      }
+    }
+    
+    function updateCharts() {
+      if (entries.length < 2) return;
+      
+      // Sort entries by date (oldest first)
+      const sortedEntries = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Format data for chart
+      const labels = sortedEntries.map(entry => formatDate(entry.date));
+      const studyData = sortedEntries.map(entry => entry.hoursStudied);
+      const sleepData = sortedEntries.map(entry => entry.hoursSleep);
+      const stressData = sortedEntries.map(entry => entry.stressLevel);
+      
+      // Destroy previous chart if exists
+      if (chart) {
+        chart.destroy();
+      }
+      
+      // Create new chart
+      const ctx = document.getElementById('trends-chart');
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Study Hours',
+              data: studyData,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              yAxisID: 'y',
+              tension: 0.1
+            },
+            {
+              label: 'Sleep Hours',
+              data: sleepData,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              yAxisID: 'y',
+              tension: 0.1
+            },
+            {
+              label: 'Stress Level',
+              data: stressData,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.1)',
+              yAxisID: 'y1',
+              tension: 0.1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: {
+                display: true,
+                text: 'Hours'
+              }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              min: 1,
+              max: 10,
+              title: {
+                display: true,
+                text: 'Stress (1-10)'
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Helper functions
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    
+    function getMoodEmoji(moodType) {
+      switch(moodType) {
+        case 'happy': return '😊';
+        case 'sad': return '😔';
+        case 'angry': return '😠';
+        case 'tired': return '😴';
+        case 'energetic': return '⚡';
+        case 'stressed': return '😰';
+        default: return '😐';
+      }
+    }
+    
+    // Initialize app
+    init();
+  </script>
+</body>
+</html>
